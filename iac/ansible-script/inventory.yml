@@ -1,0 +1,11 @@
+---
+all:
+  vars:
+    ansible_connection: network_cli
+  hosts:
+    dev:
+      ansible_network_os: linux
+      ansible_host: 52.33.108.85
+      ansible_connection: ssh
+      ansible_ssh_user: ubuntu
+      # ansible_ssh_pass: BS-iBank@23#

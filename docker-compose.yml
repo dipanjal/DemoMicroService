@@ -1,10 +1,6 @@
 version: "3.9"
-
 services:
-
   naming-server:
-    depends_on:
-      - config-server
     container_name: naming-server-container
     build:
       context: ./NamingServer
@@ -37,70 +33,53 @@ services:
       dockerfile: Dockerfile
     image: dipanjalmaitra/api-gateway:latest
     ports:
-      - "8765:8765"
+      - 8765:8765
     networks:
       - common-net
     environment:
       EUREKA_URI: http://naming-server:8761/eureka
-
-  currency-exchange:
-    depends_on:
-      - api-gateway
-      - naming-server
-      - config-server
-    container_name: currency-exchange-container
-    build:
-      context: ./CurrencyExchangeService
-      dockerfile: Dockerfile
-    image: dipanjalmaitra/currency-exchange:latest
-    ports:
-      - "8000:8000"
-    networks:
-      - common-net
-    environment:
-      ACTIVE_PROFILE: default
-      EUREKA_URI: http://naming-server:8761/eureka
-      CONFIG_SERVER_URL: http://config-server:8888
-
   currency-conversion:
     depends_on:
       - api-gateway
-      - naming-server
-      - config-server
-      - currency-exchange
     container_name: currency-conversion-container
     build:
       context: ./CurrencyConversionService
       dockerfile: Dockerfile
-    image: dipanjalmaitra/currency-conversion:latest
+    image: dipanjalmaitra/currency-exchange:latest
     ports:
-      - "8100:8100"
+      - 8100:8100
     networks:
       - common-net
     environment:
       EUREKA_URI: http://naming-server:8761/eureka
-      ACTIVE_PROFILE: default
-
+  currency-exchange:
+    depends_on:
+      - api-gateway
+    container_name: currency-exchange-container
+    build:
+      context: ./CurrencyExchangeService
+      dockerfile: Dockerfile
+    image: dipanjalmaitra/currency-conversion:latest
+    ports:
+      - 8000:8000
+    networks:
+      - common-net
+    environment:
+      EUREKA_URI: http://naming-server:8761/eureka
   geo-service:
     depends_on:
-      - config-server
-      - naming-server
       - api-gateway
-    container_name: geo-location-container
+    container_name: geo-location-service
     build:
       context: ./GeoLocationService
       dockerfile: Dockerfile
     image: dipanjalmaitra/geo-service:latest
     ports:
-      - "8200:8200"
+      - 8200:8200
     networks:
       - common-net
     environment:
-      ACTIVE_PROFILE: default
       EUREKA_URI: http://naming-server:8761/eureka
-      CONFIG_SERVER_URL: http://config-server:8888
-    restart: on-failure
-
 networks:
   common-net:
     external: true

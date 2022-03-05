@@ -1,0 +1,120 @@
+---
+- name: Dev test ansible ec2
+
+  hosts: '{{host}}'
+
+
+  gather_facts: no
+    
+  remote_user: ubuntu
+  become: yes
+  become_method: sudo
+  vars:
+      app_base_path: "/home/ansible-test/"
+      # app_name: "corporate-scheduler"
+      # app_archive_path: "/archive/"
+      # log_file_path: "{{app_base_path}}log.txt"
+      # temp_jar_path: "{{app_base_path+app_name}}_tmp.jar"
+      # jar_path: "{{app_base_path+app_name}}.jar"
+
+  tasks:
+    - name: Create App Base Directory
+      tags: deploy
+      file:
+        path: "{{app_base_path}}"
+        state: directory
+        mode: 0777
+    - name: Docker installer script
+      copy: src=docker.sh dest=/home/ansible-test/ mode=0777
+    - name: Docker installing
+      command: sh /home/ansible-test/docker.sh
+    - name: Kubernetes installer script
+      copy: src=kubernetes.sh dest=/home/ansible-test/ mode=0777
+    - name: Kubernetes installing
+      command: sh /home/ansible-test/kubernetes.sh
+
+##################################### App Archiving ###################################
+
+#     - name: Create Archive Directory
+#       tags: archive
+#       file:
+#         path: "{{app_base_path+app_archive_path}}"
+#         state: directory
+#         mode: 0755
+#       when: backup | bool
+
+#     - name: Get timestamp from the system
+#       tags: archive
+#       shell: "date +%Y-%m-%d_%H:%M:%S"
+#       register: tstamp
+#       when: backup | bool
+
+#     - tags: archive
+#       set_fact:
+#         cur_date: "{{ tstamp.stdout[0:10]}}"
+#         cur_time: "{{ tstamp.stdout[10:]}}"
+#       when: backup | bool
+
+#     - tags: remove
+#       stat:
+#         path: "{{jar_path}}"
+#       register: check_jar
+
+#     - name: Backup Previous Build
+#       tags: archive
+#       copy:
+#         src: "{{app_base_path+app_name}}.jar"
+#         dest: "{{ app_base_path+app_archive_path}}/{{app_name}}_{{cur_date}}:{{cur_time}}.jar"
+#         remote_src: true
+#       when: backup and check_jar.stat.exists | bool
+
+# ##################################### App Deployment ###################################
+
+#     - name: "Transfer Temp JAR to Remote"
+#       tags: deploy
+#       copy:
+#         src: ../../../target/corporate-ib-scheduler-app.jar
+#         dest: "{{temp_jar_path}}"
+#         mode: 0777
+
+# ################################### Kill Running Application Processes #####################
+
+#     - name: Fetch Application PID
+#       tags: kill
+#       shell: "ps -few | grep jar | grep {{ app_name }} | awk '{print $2}'"
+#       register: running_processes
+
+#     - name: Kill Running Processes
+#       tags: kill
+#       shell: "kill -9 {{running_processes.stdout.replace('\n', ' ')}}"
+#       ignore_errors: True
+
+# ################################### Delete Old JAR #####################
+
+#     - name: "Delete old JAR File if Exists"
+#       tags: remove
+#       file:
+#         path: "{{ jar_path }}"
+#         state: absent
+#       when: check_jar.stat.exists | bool
+
+#     - tags: rename
+#       stat:
+#         path: "{{temp_jar_path}}"
+#       register: check_temp_jar
+
+#     - name: "Rename Temp JAR to Original"
+#       tags: rename
+#       shell: "mv {{temp_jar_path}} {{jar_path}}"
+#       when: check_temp_jar.stat.exists | bool
+
+# ################################### Execute Application Processes #####################
+
+#     - name: "Start {{app_name}} Application"
+#       tags: exec
+#       shell: "nohup java -jar {{app_base_path+app_name}}.jar > {{log_file_path}} 2>&1 &"
+#       register: app_exec_result
+
+#     - name: "Trace Log"
+#       tags: trace
+#       shell: "cat {{log_file_path}}"
